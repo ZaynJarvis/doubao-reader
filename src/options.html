@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Doubao Reader 设置</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Doubao Reader</h1>
+      </header>
+
+      <form id="settings-form" novalidate>
+        <div class="settings-row">
+          <div class="setting-label">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="8" cy="15" r="3"></circle>
+              <path d="m10.6 13.5 8.9-8.9M16 8l2 2M14 10l2 2"></path>
+            </svg>
+            <div class="label-stack">
+              <label for="api-key">语音 API Key</label>
+              <span id="key-state" class="key-state">
+                <span class="key-dot" aria-hidden="true"></span>
+                <span class="key-state-text">检查中</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="setting-control input-shell">
+            <input
+              id="api-key"
+              type="password"
+              autocomplete="new-password"
+              spellcheck="false"
+              placeholder="API Key"
+              aria-describedby="key-state"
+              aria-errormessage="status"
+            >
+            <button
+              id="toggle-key"
+              class="icon-button"
+              type="button"
+              aria-label="显示 API Key"
+              hidden
+            >
+              <svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+                <circle cx="12" cy="12" r="2.75"></circle>
+              </svg>
+              <svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m3 3 18 18M10.6 6.1A10 10 0 0 1 12 6c6 0 9.5 6 9.5 6a15 15 0 0 1-2.1 2.8M8.1 7.1C4.5 8.7 2.5 12 2.5 12s3.5 6 9.5 6c1.4 0 2.6-.3 3.7-.7M9.9 9.9a3 3 0 0 0 4.2 4.2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="setting-label">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 10v4h3l4 3V7l-4 3H4Z"></path>
+              <path d="M15 9.5a3.5 3.5 0 0 1 0 5M17.5 7a7 7 0 0 1 0 10"></path>
+            </svg>
+            <label for="speaker">音色 ID</label>
+          </div>
+
+          <div class="setting-control">
+            <input
+              id="speaker"
+              type="text"
+              list="speaker-presets"
+              autocomplete="off"
+              spellcheck="false"
+              value="zh_female_vv_uranus_bigtts"
+              required
+              aria-describedby="speaker-hint"
+              aria-errormessage="status"
+            >
+            <datalist id="speaker-presets">
+              <option value="zh_female_wanwanxiaohe_moon_bigtts">夹子</option>
+              <option value="zh_male_liufei_uranus_bigtts">刘飞</option>
+              <option value="ICL_uranus_en_male_the_grinch_tob">老头老外</option>
+              <option value="ICL_uranus_en_male_michael_tob">英俊老外</option>
+              <option value="zh_female_jiaochuannv_uranus_bigtts">慵懒女</option>
+              <option value="zh_female_gujie_uranus_bigtts">顾里</option>
+            </datalist>
+            <p id="speaker-hint" class="hint">点击输入框选择预置音色，或到 <a href="https://console.volcengine.com/speech/new/voices?projectName=default" target="_blank" rel="noopener">火山引擎音色库</a> 获取更多音色 ID</p>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="setting-label">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 19a9 9 0 1 1 14 0"></path>
+              <path d="m12 13 4-4"></path>
+              <circle cx="12" cy="13" r="1"></circle>
+            </svg>
+            <span class="setting-name">语速</span>
+          </div>
+
+          <fieldset class="setting-control speed-control">
+            <legend class="sr-only">语速</legend>
+            <div class="speed-gears">
+              <label>
+                <input type="radio" name="rate" value="0.75">
+                <span>0.75×</span>
+              </label>
+              <label>
+                <input type="radio" name="rate" value="1" checked>
+                <span>1×</span>
+              </label>
+              <label>
+                <input type="radio" name="rate" value="1.25">
+                <span>1.25×</span>
+              </label>
+              <label>
+                <input type="radio" name="rate" value="1.5">
+                <span>1.5×</span>
+              </label>
+              <label>
+                <input type="radio" name="rate" value="2">
+                <span>2×</span>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+
+        <footer>
+          <p id="status" role="status" aria-live="polite"></p>
+          <button id="save" class="save-button" type="submit">保存</button>
+        </footer>
+      </form>
+      <p class="support">
+        觉得好用？<a href="https://buymeacoffee.com/zaynjarvis" target="_blank" rel="noopener">☕ Buy me a coffee</a>
+      </p>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

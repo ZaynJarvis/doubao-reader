@@ -1,0 +1,15 @@
+::highlight(doubao-reader-segment) {
+  background: rgba(65, 72, 121, 0.5);
+  color: #f7f4ed;
+}
+
+::highlight(doubao-reader-word) {
+  background: #586cff;
+  color: #fff;
+}
+
+.doubao-reader-source-active {
+  border-radius: 4px !important;
+  box-shadow: 0 0 0 4px rgba(128, 86, 255, 0.2) !important;
+  transition: box-shadow 160ms ease !important;
+}

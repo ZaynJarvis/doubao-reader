@@ -1,0 +1,480 @@
+:root {
+  color-scheme: light dark;
+  --canvas: #ffffff;
+  --text: #172033;
+  --muted: #667085;
+  --subtle: #667085;
+  --line: #e9edf3;
+  --control: #ffffff;
+  --control-hover: #fbfcfe;
+  --control-line: #d6dce6;
+  --blue: #356bd6;
+  --blue-hover: #2d5fc1;
+  --blue-soft: #eef4ff;
+  --success: #1f7d55;
+  --error: #c83b4d;
+  --ease-out: cubic-bezier(.23, 1, .32, 1);
+  --heading: #111827;
+  --label-icon: #516076;
+  --placeholder: #6b7280;
+  --gear-track: #f2f4f7;
+  --gear-hover: rgba(255, 255, 255, .7);
+  --gear-hover-text: #344054;
+  --input-hover-line: #b9c2cf;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #161618;
+    --text: #ececf1;
+    --muted: #9a9fab;
+    --subtle: #9a9fab;
+    --line: #2a2a2e;
+    --control: #1f1f22;
+    --control-hover: #242428;
+    --control-line: #3a3a40;
+    --blue: #6b93ff;
+    --blue-hover: #86a7ff;
+    --blue-soft: rgba(107, 147, 255, .14);
+    --success: #4fc98a;
+    --error: #ff7a8a;
+    --heading: #f4f4f6;
+    --label-icon: #a3a9b6;
+    --placeholder: #7c8290;
+    --gear-track: #232326;
+    --gear-hover: rgba(255, 255, 255, .08);
+    --gear-hover-text: #e2e4ea;
+    --input-hover-line: #4c4c54;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--canvas);
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font: 14px/1.45 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  width: min(860px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 72px 0 56px;
+}
+
+header {
+  padding: 0 4px 22px;
+}
+
+h1 {
+  margin: 0;
+  color: var(--heading);
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -.025em;
+}
+
+form {
+  border-top: 1px solid var(--line);
+}
+
+.settings-row {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  min-width: 0;
+  align-items: center;
+  gap: 32px;
+  padding: 26px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.setting-label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  color: var(--label-icon);
+}
+
+.setting-label > svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.label-stack {
+  display: grid;
+  gap: 4px;
+}
+
+.setting-label label,
+.setting-name {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 590;
+  letter-spacing: -.005em;
+}
+
+.key-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--subtle);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.key-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #aab2c0;
+}
+
+.key-state.configured {
+  color: var(--muted);
+}
+
+.key-state.configured .key-dot {
+  background: #3eb47a;
+  box-shadow: 0 0 0 3px rgba(62, 180, 122, .1);
+}
+
+.setting-control {
+  width: min(100%, 460px);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  justify-self: end;
+  border: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  height: 46px;
+  border: 1px solid var(--control-line);
+  border-radius: 11px;
+  padding: 0 14px;
+  color: var(--text);
+  outline: none;
+  background: var(--control);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .025);
+  font: inherit;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+input::placeholder {
+  color: var(--placeholder);
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: var(--blue);
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+}
+
+input[aria-invalid="true"] {
+  border-color: var(--error);
+  outline-color: var(--error);
+  box-shadow: 0 0 0 3px rgba(200, 59, 77, .12);
+}
+
+.hint {
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.hint a {
+  color: var(--blue);
+}
+
+.input-shell {
+  position: relative;
+}
+
+.input-shell input {
+  padding-right: 46px;
+}
+
+button {
+  border: 0;
+  font: inherit;
+}
+
+.icon-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  place-items: center;
+  border-radius: 9px;
+  color: #748094;
+  outline: none;
+  background: transparent;
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease, transform 140ms var(--ease-out);
+}
+
+.icon-button[hidden] {
+  display: none;
+}
+
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.eye-closed,
+.icon-button[data-revealed="true"] .eye-open {
+  display: none;
+}
+
+.icon-button[data-revealed="true"] .eye-closed {
+  display: block;
+}
+
+.icon-button:focus-visible,
+.save-button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.speed-gears {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  padding: 4px;
+  border-radius: 11px;
+  background: var(--gear-track);
+}
+
+.speed-gears label {
+  position: relative;
+  margin: 0;
+  cursor: pointer;
+}
+
+.speed-gears input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.speed-gears span {
+  display: grid;
+  height: 38px;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  transition: color 140ms ease, background-color 140ms ease, box-shadow 140ms ease, transform 140ms var(--ease-out);
+}
+
+.speed-gears input:checked + span {
+  color: #fff;
+  background: var(--blue);
+  box-shadow: 0 2px 5px rgba(35, 83, 177, .22);
+}
+
+.speed-gears input:focus-visible + span {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 24px 4px 0;
+}
+
+#status {
+  min-height: 17px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#status.success {
+  color: var(--success);
+}
+
+#status.error {
+  color: var(--error);
+}
+
+.support {
+  margin: 40px 4px 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.support a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.support a:hover {
+  text-decoration: underline;
+}
+
+.save-button {
+  min-width: 112px;
+  height: 44px;
+  border-radius: 10px;
+  padding: 0 24px;
+  color: #fff;
+  background: var(--blue);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+  box-shadow: 0 2px 5px rgba(35, 83, 177, .18);
+  transition: background-color 140ms ease, box-shadow 140ms ease, transform 140ms var(--ease-out), opacity 140ms ease;
+}
+
+.save-button:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
+input:disabled,
+.icon-button:disabled {
+  cursor: wait;
+}
+
+.icon-button:active,
+.save-button:active,
+.speed-gears label:active span {
+  transform: scale(.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  input[type="text"]:hover,
+  input[type="password"]:hover {
+    border-color: var(--input-hover-line);
+    background: var(--control-hover);
+  }
+
+  .icon-button:hover {
+    color: var(--blue);
+    background: var(--blue-soft);
+  }
+
+  .speed-gears label:hover input:not(:checked) + span {
+    color: var(--gear-hover-text);
+    background: var(--gear-hover);
+  }
+
+  .save-button:hover {
+    background: var(--blue-hover);
+    box-shadow: 0 3px 8px rgba(35, 83, 177, .24);
+  }
+}
+
+@media (max-width: 680px) {
+  main {
+    width: min(100% - 40px, 520px);
+    padding: 36px 0 40px;
+  }
+
+  header {
+    padding: 0 0 16px;
+  }
+
+  .settings-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 22px 0;
+  }
+
+  .setting-control {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 10px;
+    padding: 22px 0 0;
+  }
+
+  #status {
+    text-align: center;
+  }
+
+  .save-button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-button,
+  .speed-gears span,
+  .save-button {
+    transition: color 140ms ease, background-color 140ms ease, opacity 140ms ease;
+  }
+}
+
+@media (forced-colors: active) {
+  input[type="text"],
+  input[type="password"],
+  .speed-gears,
+  .save-button {
+    border: 1px solid CanvasText;
+  }
+
+  .speed-gears input:checked + span {
+    outline: 2px solid Highlight;
+    outline-offset: -3px;
+  }
+}
