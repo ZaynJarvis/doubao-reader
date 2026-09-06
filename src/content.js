@@ -51,6 +51,9 @@
 
   bindUi();
   refreshSettings();
+  chrome.storage?.local.get("widgetPosition").then((stored) => {
+    if (stored?.widgetPosition) placeShell(stored.widgetPosition);
+  }).catch(() => {});
 
   let lastContentMutationAt = performance.now();
   const contentObserver = new MutationObserver((records) => {
@@ -115,15 +118,24 @@
       if (!origin) return;
       const width = ui.shell.offsetWidth;
       const height = ui.shell.offsetHeight;
-      const left = Math.min(Math.max(0, event.clientX - origin.x), window.innerWidth - width);
-      const top = Math.min(Math.max(0, event.clientY - origin.y), window.innerHeight - height);
-      ui.shell.style.left = `${left}px`;
-      ui.shell.style.top = `${top}px`;
-      ui.shell.style.right = "auto";
+      placeShell({
+        left: Math.min(Math.max(0, event.clientX - origin.x), window.innerWidth - width),
+        top: Math.min(Math.max(0, event.clientY - origin.y), window.innerHeight - height),
+      });
     });
-    const end = () => { origin = null; };
+    const end = () => {
+      if (!origin) return;
+      origin = null;
+      chrome.storage?.local.set({ widgetPosition: { left: ui.shell.offsetLeft, top: ui.shell.offsetTop } }).catch(() => {});
+    };
     ui.time.addEventListener("pointerup", end);
     ui.time.addEventListener("pointercancel", end);
+  }
+
+  function placeShell({ left, top }) {
+    ui.shell.style.left = `${Math.max(0, Math.min(left, window.innerWidth - 52))}px`;
+    ui.shell.style.top = `${Math.max(0, Math.min(top, window.innerHeight - 52))}px`;
+    ui.shell.style.right = "auto";
   }
 
   async function refreshSettings() {
@@ -270,6 +282,9 @@
     state.wordTimings = [];
     state.mappedWords = [];
     state.mode = state.wantsPlayback ? "loading" : "paused";
+    for (const key of state.cache.keys()) {
+      if (key < index || key > index + 1) state.cache.delete(key);
+    }
     highlightCurrent();
     render();
 
