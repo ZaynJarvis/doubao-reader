@@ -8,6 +8,13 @@
 
   const MAX_SEGMENT_LENGTH = 280;
   const RATE_STEPS = [0.75, 1, 1.2, 1.5, 2];
+  const VOICES = [
+    ["zh_male_liufei_uranus_bigtts", "刘飞"],
+    ["ICL_uranus_en_male_the_grinch_tob", "老头"],
+    ["ICL_uranus_en_male_michael_tob", "英俊"],
+    ["zh_female_jiaochuannv_uranus_bigtts", "慵懒"],
+    ["zh_female_gujie_uranus_bigtts", "顾里"],
+  ];
   const extractor = globalThis.DoubaoPageExtractor;
 
   const state = {
@@ -23,6 +30,7 @@
     mode: "idle",
     queue: [],
     rate: 1,
+    speaker: "",
     sessionId: null,
     visible: false,
     wantsPlayback: false,
@@ -44,6 +52,7 @@
     stop: shadow.querySelector('[data-action="stop"]'),
     settings: shadow.querySelector('[data-action="settings"]'),
     rate: shadow.querySelector('[data-action="rate"]'),
+    voice: shadow.querySelector('[data-action="voice"]'),
     time: shadow.querySelector(".time"),
     status: shadow.querySelector(".sr-status"),
     error: shadow.querySelector(".error"),
@@ -51,9 +60,6 @@
 
   bindUi();
   refreshSettings();
-  chrome.storage?.local.get("widgetPosition").then((stored) => {
-    if (stored?.widgetPosition) placeShell(stored.widgetPosition);
-  }).catch(() => {});
 
   let lastContentMutationAt = performance.now();
   const contentObserver = new MutationObserver((records) => {
@@ -98,6 +104,7 @@
     ui.stop.addEventListener("click", stopReading);
     ui.settings.addEventListener("click", () => chrome.runtime.sendMessage({ type: "OPEN_OPTIONS" }));
     ui.rate.addEventListener("click", cycleRate);
+    ui.voice.addEventListener("click", cycleVoice);
     document.addEventListener("pointerdown", (event) => {
       if (!host.contains(event.target)) {
         ui.shell.classList.remove("touch-expanded");
@@ -126,7 +133,7 @@
     const end = () => {
       if (!origin) return;
       origin = null;
-      chrome.storage?.local.set({ widgetPosition: { left: ui.shell.offsetLeft, top: ui.shell.offsetTop } }).catch(() => {});
+      send({ type: "SET_PREFS", widgetPosition: { left: ui.shell.offsetLeft, top: ui.shell.offsetTop } });
     };
     ui.time.addEventListener("pointerup", end);
     ui.time.addEventListener("pointercancel", end);
@@ -146,6 +153,8 @@
     }
     state.configured = response.settings.configured;
     state.rate = Number(response.settings.rate) || 1;
+    state.speaker = response.settings.speaker || "";
+    if (response.settings.widgetPosition) placeShell(response.settings.widgetPosition);
     render();
   }
 
@@ -528,6 +537,9 @@
     const current = RATE_STEPS.indexOf(state.rate);
     state.rate = RATE_STEPS[(current + 1) % RATE_STEPS.length];
     ui.rate.textContent = `${state.rate}×`;
+    const voice = VOICES.find(([id]) => id === state.speaker);
+    ui.voice.textContent = voice ? voice[1] : "自定";
+    ui.voice.title = `音色：${voice ? voice[1] : state.speaker || "未设置"}（点击切换）`;
     await send({ type: "UPDATE_RATE", rate: state.rate });
     if (state.sessionId) {
       await send({
@@ -536,6 +548,18 @@
         rate: state.rate,
         sessionId: state.sessionId,
       });
+    }
+  }
+
+  async function cycleVoice() {
+    const current = VOICES.findIndex(([id]) => id === state.speaker);
+    state.speaker = VOICES[(current + 1) % VOICES.length][0];
+    state.cache.clear();
+    render();
+    await send({ type: "SET_PREFS", speaker: state.speaker });
+    if (state.sessionId && state.currentIndex >= 0) {
+      await send({ type: "PLAYBACK_COMMAND", command: "stop", sessionId: state.sessionId });
+      await loadAndPlay(state.currentIndex);
     }
   }
 
@@ -785,6 +809,9 @@
       ? "准备朗读当前页面"
       : `${state.mode === "playing" ? "正在播放" : state.mode === "paused" ? "已暂停" : "正在准备"}，第 ${position} 段，共 ${total} 段`;
     ui.rate.textContent = `${state.rate}×`;
+    const voice = VOICES.find(([id]) => id === state.speaker);
+    ui.voice.textContent = voice ? voice[1] : "自定";
+    ui.voice.title = `音色：${voice ? voice[1] : state.speaker || "未设置"}（点击切换）`;
     ui.previous.disabled = !total || state.currentIndex <= 0;
     ui.next.disabled = !total || state.currentIndex >= total - 1;
     ui.stop.disabled = state.mode === "idle";
@@ -838,6 +865,7 @@
             <button data-action="previous" class="control playback-only" aria-label="上一段" title="上一段">${previousIcon()}</button>
             <button data-action="next" class="control playback-only" aria-label="下一段" title="下一段">${nextIcon()}</button>
             <button data-action="rate" class="rate" aria-label="切换语速" title="切换语速">1×</button>
+            <button data-action="voice" class="rate" aria-label="切换音色" title="切换音色">自定</button>
             <button data-action="settings" class="control" aria-label="设置" title="设置">${settingsIcon()}</button>
             <button data-action="stop" class="control stop playback-only" aria-label="停止朗读" title="停止朗读">${stopIcon()}</button>
           </div>

@@ -106,6 +106,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === "SET_PREFS") {
+    const prefs = {};
+    if (typeof message.speaker === "string" && message.speaker.trim()) prefs.speaker = message.speaker.trim();
+    if (message.widgetPosition && Number.isFinite(message.widgetPosition.left) && Number.isFinite(message.widgetPosition.top)) {
+      prefs.widgetPosition = { left: message.widgetPosition.left, top: message.widgetPosition.top };
+    }
+    chrome.storage.local.set(prefs)
+      .then(() => sendResponse({ ok: true }))
+      .catch((error) => sendResponse({ ok: false, error: publicError(error) }));
+    return true;
+  }
+
   if (message.type === "UPDATE_RATE") {
     const rate = Math.min(2, Math.max(0.75, Number(message.rate) || 1));
     chrome.storage.local.set({ rate })
@@ -157,6 +169,7 @@ async function getSettings(overrides = {}) {
     "speechApiKey",
     "speaker",
     "rate",
+    "widgetPosition",
   ]);
 
   return {
@@ -176,6 +189,7 @@ async function getSafeSettings() {
     resourceId: settings.resourceId,
     speaker: settings.speaker,
     rate: Number(settings.rate) || DEFAULT_SETTINGS.rate,
+    widgetPosition: settings.widgetPosition || null,
   };
 }
 
