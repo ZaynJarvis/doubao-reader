@@ -1,11 +1,9 @@
 ::highlight(doubao-reader-segment) {
-  background: rgba(65, 72, 121, 0.5);
-  color: #f7f4ed;
+  background: rgba(88, 108, 255, 0.16);
 }
 
 ::highlight(doubao-reader-word) {
-  background: #586cff;
-  color: #fff;
+  background: rgba(88, 108, 255, 0.42);
 }
 
 .doubao-reader-source-active {
