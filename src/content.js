@@ -817,29 +817,30 @@
       * { box-sizing: border-box; }
       button { font: inherit; }
       .shell { position: fixed; top: clamp(84px, 16vh, 132px); right: 22px; z-index: 2147483647; width: 52px; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #fff; }
-      .time { position: absolute; right: 0; bottom: calc(100% + 6px); min-width: 52px; padding: 2px 8px; border-radius: 11px; color: #fff; background: rgba(31,31,32,.94); box-shadow: 0 0 0 1px rgba(255,255,255,.055), 0 4px 12px rgba(0,0,0,.18); font-size: 12px; font-weight: 700; line-height: 18px; letter-spacing: -.02em; text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; cursor: grab; touch-action: none; user-select: none; }
+      .time { position: absolute; right: 12px; bottom: calc(100% - 6px); min-width: 28px; padding: 1px 7px; border-radius: 10px; color: #fff; background: rgba(31,31,32,.94); box-shadow: 0 0 0 1px rgba(255,255,255,.055), 0 4px 12px rgba(0,0,0,.18); font-size: 11px; font-weight: 700; line-height: 16px; letter-spacing: -.02em; text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; cursor: grab; touch-action: none; user-select: none; }
       .time:active { cursor: grabbing; }
       .player { position: relative; width: 52px; }
-      .primary-rail, .secondary-rail { display: flex; width: 52px; align-items: center; flex-direction: column; padding: 12px; border: 0; border-radius: 26px; background: rgba(31,31,32,.96); box-shadow: 0 0 0 1px rgba(255,255,255,.055), 0 8px 22px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035); backdrop-filter: blur(16px); }
-      .secondary-rail { position: absolute; top: calc(100% + 8px); right: 0; gap: 6px; opacity: 0; pointer-events: none; transform: translateY(-4px) scale(.97); transform-origin: 50% 0; transition: opacity 160ms cubic-bezier(.23,1,.32,1), transform 180ms cubic-bezier(.23,1,.32,1); }
-      .secondary-rail::before { content: ""; position: absolute; top: -12px; right: -7px; left: -7px; height: 12px; background: transparent; }
+      .primary-rail { display: flex; width: 52px; padding: 12px; }
+      .secondary-rail { position: absolute; top: calc(100% - 8px); right: 12px; display: flex; width: 28px; flex-direction: column; gap: 2px; padding: 3px 0; border-radius: 14px; background: rgba(31,31,32,.96); box-shadow: 0 0 0 1px rgba(255,255,255,.055), 0 8px 22px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035); backdrop-filter: blur(16px); opacity: 0; pointer-events: none; transform: translateY(-4px) scale(.97); transform-origin: 50% 0; transition: opacity 160ms cubic-bezier(.23,1,.32,1), transform 180ms cubic-bezier(.23,1,.32,1); }
+      .secondary-rail::before { content: ""; position: absolute; top: -12px; right: -12px; left: -12px; height: 12px; background: transparent; }
       .shell:has(:focus-visible) .secondary-rail, .shell.touch-expanded .secondary-rail { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
-      .play, .control, .rate { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; padding: 0; border: 0; border-radius: 10px; color: rgba(255,255,255,.94); background: transparent; cursor: pointer; transition: color 140ms ease, background-color 140ms ease, transform 140ms cubic-bezier(.23,1,.32,1); }
-      .play:active, .control:active:not(:disabled), .rate:active { transform: scale(.96); }
+      .play, .control, .rate { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; padding: 0; border: 0; border-radius: 50%; color: rgba(255,255,255,.94); background: transparent; cursor: pointer; transition: color 140ms ease, background-color 140ms ease, transform 140ms cubic-bezier(.23,1,.32,1); }
+      .play { background: rgba(31,31,32,.96); box-shadow: 0 0 0 1px rgba(255,255,255,.055), 0 8px 22px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035); backdrop-filter: blur(16px); }
+      .play:active, .control:active:not(:disabled), .rate:active { transform: scale(.94); }
       .play:focus-visible, .control:focus-visible, .rate:focus-visible { outline: 2px solid #9c82ff; outline-offset: 1px; }
-      .play svg { width: 22px; height: 22px; }
-      .control svg { width: 18px; height: 18px; }
+      .play svg { width: 16px; height: 16px; }
+      .control svg { width: 14px; height: 14px; }
       .control:disabled { opacity: .22; cursor: default; }
       .shell[data-active="false"] .playback-only { display: none; }
       .stop { color: rgba(255,255,255,.48); }
       @keyframes spin { to { transform: rotate(360deg); } }
-      .rate { font-size: 11px; font-weight: 720; letter-spacing: -.03em; }
+      .rate { font-size: 10px; font-weight: 720; letter-spacing: -.03em; }
       .error { position: absolute; top: 0; right: calc(100% + 10px); width: 238px; margin: 0; padding: 10px 12px; border: 1px solid rgba(255,112,139,.2); border-radius: 12px; color: #ffd6de; background: rgba(48,28,33,.97); box-shadow: 0 8px 24px rgba(0,0,0,.24); font-size: 12px; line-height: 17px; }
       .sr-status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
       [hidden] { display: none !important; }
       @media (hover: hover) and (pointer: fine) {
         .shell:hover .secondary-rail { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
-        .play:hover, .control:hover:not(:disabled), .rate:hover { color: #fff; background: rgba(255,255,255,.09); }
+        .play:hover { background: rgba(48,48,50,.98); } .control:hover:not(:disabled), .rate:hover { color: #fff; background: rgba(255,255,255,.12); }
         .stop:hover:not(:disabled) { color: #ffb6c2; background: rgba(255,91,117,.12); }
       }
       @media (prefers-reduced-motion: reduce) {
