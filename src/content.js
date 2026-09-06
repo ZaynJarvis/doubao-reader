@@ -7,7 +7,7 @@
   document.documentElement.dataset.doubaoReaderLoaded = "true";
 
   const MAX_SEGMENT_LENGTH = 280;
-  const RATE_STEPS = [0.75, 1, 1.25, 1.5, 2];
+  const RATE_STEPS = [0.75, 1, 1.2, 1.5, 2];
   const extractor = globalThis.DoubaoPageExtractor;
 
   const state = {

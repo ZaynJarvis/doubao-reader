@@ -5,7 +5,7 @@ const DEFAULTS = Object.freeze({
   speaker: "zh_female_wanwanxiaohe_moon_bigtts",
   rate: 1,
 });
-const RATE_STEPS = new Set([0.75, 1, 1.25, 1.5, 2]);
+const RATE_STEPS = new Set([0.75, 1, 1.2, 1.5, 2]);
 
 const elements = {
   apiKey: document.querySelector("#api-key"),
