@@ -29,6 +29,7 @@
     loadGeneration: 0,
     mode: "idle",
     queue: [],
+    pageBlocks: null,
     rate: 1,
     speaker: "",
     sessionId: null,
@@ -62,14 +63,23 @@
   refreshSettings();
 
   let lastContentMutationAt = performance.now();
+  let refreshTimer;
   const contentObserver = new MutationObserver((records) => {
     if (records.some((record) => !host.contains(record.target))) {
       lastContentMutationAt = performance.now();
+      clearTimeout(refreshTimer);
+      if (state.pageBlocks) {
+        refreshTimer = setTimeout(() => {
+          if (extendQueue()) render();
+        }, 120);
+      }
     }
   });
   contentObserver.observe(document.documentElement, {
     childList: true,
     characterData: true,
+    attributes: true,
+    attributeFilter: ["hidden", "aria-hidden", "class", "style"],
     subtree: true,
   });
 
@@ -238,7 +248,7 @@
 
     await waitForContentSettle();
     const extracted = extractReadableSegments();
-    await beginQueue(extracted.queue, extracted.title || document.title || "当前页面", firstVisibleIndex(extracted.queue));
+    await beginQueue(extracted.queue, extracted.title || document.title || "当前页面", firstVisibleIndex(extracted.queue), extracted.blocks);
   }
 
   // Start from the first segment whose text is at or below the top of the viewport,
@@ -271,7 +281,7 @@
     await beginQueue(queue, label);
   }
 
-  async function beginQueue(queue, label, startIndex = 0) {
+  async function beginQueue(queue, label, startIndex = 0, pageBlocks = null) {
     if (!queue.length) {
       showError("这页没有找到可朗读的正文。可先选中文字再试。");
       return;
@@ -279,6 +289,7 @@
 
     await stopReading();
     state.queue = queue;
+    state.pageBlocks = pageBlocks;
     state.currentIndex = startIndex;
     state.currentTime = 0;
     state.duration = null;
@@ -294,22 +305,92 @@
     await loadAndPlay(startIndex);
   }
 
-  // Infinite-scroll pages append content as the user (or our auto-scroll) moves
-  // down. Re-extract and append only blocks whose nodes we have not queued yet.
+  // Keep a block ledger so virtualized nodes disappearing from the DOM do not
+  // discard unread text. Insert newly rendered blocks before their next known
+  // neighbour, rather than appending them after an already-rendered conclusion.
   function extendQueue() {
-    const known = new Set(state.queue.flatMap((segment) => segment.nodes || []));
-    if (!known.size || !extractor) return false;
-    const result = extractor.extractPage(document, { window });
-    const freshBlocks = result.blocks.filter((block) => !(block.nodes || [block.node]).some((node) => known.has(node)));
-    const fresh = extractor.segmentBlocks(freshBlocks, { maxLength: MAX_SEGMENT_LENGTH, targetLength: 120 });
-    if (!fresh.length) return false;
-    state.queue.push(...fresh);
-    return true;
+    if (!state.pageBlocks || !state.sessionId || !extractor) return false;
+    const incoming = extractor.extractPage(document, { window }).blocks;
+    const blocks = state.pageBlocks.slice();
+    let cursor = 0;
+    for (let i = 0; i < incoming.length; i += 1) {
+      const block = incoming[i];
+      const key = comparableText(block.text);
+      let found = blocks.findIndex((old, index) => index >= cursor && comparableText(old.text) === key);
+      // A renderer can grow a paragraph in place. A recycled node with unrelated
+      // text is a new block and must not overwrite the saved paragraph.
+      if (found < 0) {
+        found = blocks.findIndex((old, index) => index >= cursor && old.node && old.node === block.node
+          && key.startsWith(comparableText(old.text)));
+      }
+      if (found >= 0) {
+        blocks[found] = block;
+        cursor = found + 1;
+      } else {
+        let insertion = blocks.length;
+        for (const next of incoming.slice(i + 1)) {
+          const anchor = blocks.findIndex((old, index) => index >= cursor
+            && comparableText(old.text) === comparableText(next.text));
+          if (anchor >= 0) { insertion = anchor; break; }
+        }
+        blocks.splice(insertion, 0, block);
+        cursor = insertion + 1;
+      }
+    }
+    state.pageBlocks = blocks;
+    const segments = extractor.segmentBlocks(blocks, {
+      firstMaxLength: 140, maxLength: MAX_SEGMENT_LENGTH, targetLength: 120,
+    });
+    const current = state.queue[state.currentIndex];
+    if (!current) return false;
+    const key = segments.map((segment) => comparableText(segment.text)).join("");
+    const wanted = comparableText(current.text);
+    // Include the preceding segment when possible to disambiguate repeated text.
+    const previous = comparableText(state.queue[state.currentIndex - 1]?.text);
+    const contextual = previous ? key.indexOf(previous + wanted) : -1;
+    const start = contextual >= 0 ? contextual + previous.length : key.indexOf(wanted);
+    if (!wanted || start < 0) return false;
+    let remaining = start + wanted.length;
+    const future = [];
+    for (const segment of segments) {
+      const length = comparableText(segment.text).length;
+      if (remaining >= length) { remaining -= length; continue; }
+      if (remaining > 0) {
+        let offset = 0;
+        let count = 0;
+        while (offset < segment.text.length && count < remaining) {
+          const character = String.fromCodePoint(segment.text.codePointAt(offset));
+          count += comparableText(character).length;
+          offset += character.length;
+        }
+        const text = segment.text.slice(offset).replace(/^[^\p{L}\p{N}]+/u, "");
+        if (text) future.push({ ...segment, text });
+        remaining = 0;
+      } else {
+        future.push(segment);
+      }
+    }
+    const oldFuture = state.queue.slice(state.currentIndex + 1);
+    const changed = oldFuture.length !== future.length
+      || future.some((segment, index) => segment.text !== oldFuture[index]?.text);
+    // Current audio and its index stay fixed; only unread audio can be replaced.
+    future.forEach((segment, offset) => {
+      if (segment.text !== oldFuture[offset]?.text) state.cache.delete(state.currentIndex + 1 + offset);
+    });
+    for (const index of state.cache.keys()) {
+      if (index > state.currentIndex + future.length) state.cache.delete(index);
+    }
+    state.queue.splice(state.currentIndex + 1, Infinity, ...future);
+    return changed;
   }
 
   async function loadAndPlay(index) {
-    if (index >= state.queue.length && state.sessionId && extendQueue()) {
-      render();
+    const pendingSession = state.sessionId;
+    const pendingGeneration = state.loadGeneration;
+    if (state.pageBlocks) {
+      await waitForContentSettle();
+      if (state.sessionId !== pendingSession || state.loadGeneration !== pendingGeneration) return;
+      if (extendQueue()) render();
     }
     if (index < 0 || index >= state.queue.length || !state.sessionId) {
       finishReading();
@@ -415,7 +496,7 @@
       }
       return response;
     }).catch((error) => {
-      state.cache.delete(index);
+      if (state.cache.get(index) === promise) state.cache.delete(index);
       throw error;
     });
 
@@ -431,18 +512,7 @@
     if (message.event === "ended") {
       state.cache.delete(state.currentIndex);
       const nextIndex = state.currentIndex + 1;
-      if (!state.wantsPlayback && nextIndex < state.queue.length) {
-        state.currentIndex = nextIndex;
-        state.currentTime = 0;
-        state.duration = null;
-        state.wordTimings = [];
-        state.mappedWords = [];
-        state.mode = "paused";
-        highlightCurrent();
-        render();
-      } else {
-        loadAndPlay(nextIndex);
-      }
+      loadAndPlay(nextIndex);
     } else if (message.event === "paused") {
       if (!state.wantsPlayback) {
         state.mode = "paused";
@@ -502,6 +572,8 @@
     state.wordTimings = [];
     state.mappedWords = [];
     state.queue = [];
+    state.pageBlocks = null;
+    clearTimeout(refreshTimer);
     state.cache.clear();
     clearHighlight();
     clearError();
@@ -526,6 +598,8 @@
     state.wordTimings = [];
     state.mappedWords = [];
     state.queue = [];
+    state.pageBlocks = null;
+    clearTimeout(refreshTimer);
     state.cache.clear();
     state.sessionId = null;
     state.wantsPlayback = false;
@@ -573,7 +647,7 @@
       maxLength: MAX_SEGMENT_LENGTH,
       targetLength: 120,
     });
-    return { title: result.title, queue };
+    return { title: result.title, queue, blocks: result.blocks };
   }
 
   function splitText(input) {
@@ -803,7 +877,8 @@
       ui.play.innerHTML = iconState === "loading" ? spinnerIcon() : iconState === "pause" ? pauseIcon() : playIcon();
     }
     ui.play.title = canPause ? "暂停" : "播放";
-    ui.time.textContent = formatDuration(remainingSeconds());
+    ui.time.textContent = `≈ ${formatDuration(remainingSeconds())}`;
+    ui.time.title = "预计剩余时长，随已加载正文动态更新；拖动移动";
     ui.time.hidden = state.mode === "idle" || !total;
     ui.status.textContent = state.mode === "idle"
       ? "准备朗读当前页面"

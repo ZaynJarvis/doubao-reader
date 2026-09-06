@@ -9,10 +9,14 @@ const { parseHTML } = require("linkedom");
 
 const CONTENT_SOURCE = fs.readFileSync(require.resolve("../src/content.js"), "utf8");
 
-function createHarness({ deferredSynthesis = false } = {}) {
-  const { window } = parseHTML("<!doctype html><html><body><main>fixture</main></body></html>");
+function createHarness({ deferredSynthesis = false, page = null } = {}) {
+  const { window } = parseHTML(page || "<!doctype html><html><body><main>fixture</main></body></html>");
   Object.defineProperty(window, "top", { value: window, configurable: true });
   window.getComputedStyle = () => ({ display: "block", visibility: "visible", opacity: "1" });
+  window.document.createRange = () => ({
+    selectNodeContents() {}, setStart() {}, setEnd() {},
+    getBoundingClientRect: () => ({ top: 100, bottom: 200, height: 100 }),
+  });
   window.getSelection = () => ({ toString: () => "" });
   window.HTMLElement.prototype.scrollIntoView = () => {};
 
@@ -72,7 +76,7 @@ function createHarness({ deferredSynthesis = false } = {}) {
   };
 
   const context = vm.createContext({
-    CSS: { highlights: new Map() },
+    CSS: page ? undefined : { highlights: new Map() },
     Highlight: class Highlight {},
     HTMLElement: window.HTMLElement,
     MutationObserver: window.MutationObserver,
@@ -88,7 +92,7 @@ function createHarness({ deferredSynthesis = false } = {}) {
     window,
   });
   context.globalThis = context;
-  context.DoubaoPageExtractor = {
+  context.DoubaoPageExtractor = page ? require("../src/extractor.js") : {
     extractPage: () => ({ title: "fixture", blocks: [] }),
     getSelectionText: () => "",
     segmentBlocks: () => [],
@@ -97,6 +101,10 @@ function createHarness({ deferredSynthesis = false } = {}) {
   vm.runInContext(CONTENT_SOURCE, context);
 
   return {
+    document: window.document,
+    time: () => shadow.querySelector(".time").textContent,
+    status: () => shadow.querySelector(".sr-status").textContent,
+    stop: () => shadow.querySelector('[data-action="stop"]').click(),
     commandCalls,
     emit: (message) => listener(message),
     playCalls,
@@ -106,12 +114,12 @@ function createHarness({ deferredSynthesis = false } = {}) {
   };
 }
 
-async function flushUntil(predicate, attempts = 20) {
+async function flushUntil(predicate, attempts = 100) {
   for (let index = 0; index < attempts; index += 1) {
     if (predicate()) {
       return;
     }
-    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setTimeout(resolve, 10));
   }
   assert.ok(predicate(), "condition did not become true");
 }
@@ -169,4 +177,71 @@ test("pausing while synthesis is pending prevents the resulting audio from auto-
   await new Promise((resolve) => setImmediate(resolve));
 
   assert.equal(harness.playCalls.length, 0, "audio must remain paused after synthesis completes");
+});
+
+const paragraph = (name) => `${name}。${"这是一段需要完整连续朗读的正文，用来验证延迟加载时的播放顺序。".repeat(5)}`;
+const pageFixture = () => `<html><body><article><p id="first">${paragraph("开头")}</p><p id="last">${paragraph("结尾")}</p></article></body></html>`;
+const endCurrent = (harness) => {
+  const current = harness.playCalls.at(-1);
+  harness.emit({ type: "AUDIO_EVENT", event: "ended", sessionId: current.sessionId, segmentIndex: current.segmentIndex });
+};
+
+test("late middle blocks update the estimate and replace prefetched tail audio in document order", async () => {
+  const harness = createHarness({ page: pageFixture() });
+  await new Promise((resolve) => setImmediate(resolve));
+  harness.emit({ type: "TOGGLE_PLAYBACK" });
+  await flushUntil(() => harness.playCalls.length === 1);
+  assert.ok(harness.synthesisCalls.some((call) => call.text.includes("结尾")), "ending was prefetched before the middle existed");
+  const initialTime = harness.time();
+  const article = harness.document.querySelector("article");
+  const middle = harness.document.createElement("p");
+  middle.textContent = paragraph("中间").repeat(10);
+  article.insertBefore(middle, harness.document.querySelector("#last"));
+  await flushUntil(() => harness.time() !== initialTime);
+  const count = harness.playCalls.length;
+  endCurrent(harness);
+  await flushUntil(() => harness.playCalls.length > count);
+  const next = harness.playCalls.at(-1).segmentIndex;
+  assert.ok(harness.synthesisCalls.filter((call) => call.requestId.startsWith(`${next}-`)).at(-1).text.includes("中间"));
+  assert.match(harness.time(), /≈/);
+  harness.stop();
+});
+
+test("a growing paragraph keeps its unread suffix after the current audio", async () => {
+  const harness = createHarness({ page: `<html><body><article><p id="first">${paragraph("开头")}</p></article></body></html>` });
+  await new Promise((resolve) => setImmediate(resolve));
+  harness.emit({ type: "TOGGLE_PLAYBACK" });
+  await flushUntil(() => harness.playCalls.length === 1);
+  harness.document.querySelector("#first").textContent += paragraph("新增后半段");
+  endCurrent(harness);
+  await flushUntil(() => harness.playCalls.length === 2);
+  assert.ok(harness.synthesisCalls.filter((call) => call.requestId.startsWith("1-")).at(-1).text.includes("新增后半段"));
+  harness.stop();
+});
+
+test("virtualized node recycling retains old content and adds new text once", async () => {
+  const harness = createHarness({ page: `<html><body><article><p id="first">${paragraph("开头")}</p></article></body></html>` });
+  await new Promise((resolve) => setImmediate(resolve));
+  harness.emit({ type: "TOGGLE_PLAYBACK" });
+  await flushUntil(() => harness.playCalls.length === 1);
+  harness.document.querySelector("#first").textContent = paragraph("回收节点的新段落");
+  endCurrent(harness);
+  await flushUntil(() => harness.playCalls.length === 2);
+  assert.ok(harness.synthesisCalls.filter((call) => call.requestId.startsWith("1-")).at(-1).text.includes("回收节点的新段落"));
+  endCurrent(harness);
+  await flushUntil(() => harness.playButton().dataset.state === "idle");
+  assert.equal(harness.playCalls.length, 2);
+});
+
+test("stopping during the settle window cancels the pending continuation", async () => {
+  const harness = createHarness({ page: pageFixture() });
+  await new Promise((resolve) => setImmediate(resolve));
+  harness.emit({ type: "TOGGLE_PLAYBACK" });
+  await flushUntil(() => harness.playCalls.length === 1);
+  harness.document.querySelector("#first").append("新增文本");
+  endCurrent(harness);
+  harness.stop();
+  await new Promise((resolve) => setTimeout(resolve, 180));
+  assert.equal(harness.playCalls.length, 1);
+  assert.equal(harness.playButton().dataset.state, "idle");
 });
