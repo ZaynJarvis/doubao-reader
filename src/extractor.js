@@ -69,6 +69,7 @@
     "VIDEO",
   ]);
   const HARD_EXCLUDED_TOKEN = /^(?:account|actions?|ads|advert(?:isement)?|banner|breadcrumbs?|comments?|controls?|cookie|copy-actions?|dialog|drawer|dropdown|footer|menu|menubar|modal|navigation|navbar|nav|notifications?|popover|promo|recommendations?|related|samples?|share|sidebar|social|sponsor|table-of-contents|toast|toc|toolbar)$/i;
+  const MOUNT_POINT_TOKEN = /^(?:app|root)$/i;
   const POSITIVE_TOKEN = /^(?:article|body|content|contentdoc|doc|doceditor|document|entry|main|page|post|reader|story|text|viewer)$/i;
   const HEADING_TAG = /^H[1-6]$/;
 
@@ -598,6 +599,11 @@
       return true;
     }
     const tokens = getIdentityTokens(element);
+    // A mount point such as Headless UI's "#headless-ui-popover-root" wraps the
+    // whole SPA; its name describes what gets portaled into it, not its content.
+    if (tokens.some((token) => MOUNT_POINT_TOKEN.test(token))) {
+      return false;
+    }
     return tokens.some((token) => HARD_EXCLUDED_TOKEN.test(token));
   }
 

@@ -184,3 +184,16 @@ test("keeps the first TTS request short at a natural block boundary", () => {
   assert.ok(segments.slice(1).some((segment) => segment.nodes.length >= 3));
   assert.ok(segments.slice(1).every((segment) => segment.text.length <= 280));
 });
+
+test("does not prune an SPA mounted under a portal root whose id contains an excluded token", () => {
+  const result = extract(`
+    <div id="headless-ui-popover-root">
+      <div class="post">
+        <h1>AI Native 的组织形态</h1>
+        <p>当执行成本下降到接近零，组织的边界就不再由协调成本决定，而是由判断力的分布决定。</p>
+        <p>这意味着大多数中层流程会被重写，管理者的工作从分配任务变成校准目标。</p>
+      </div>
+    </div>`);
+  assert.notEqual(result.strategy, "empty");
+  assert.match(combinedText(result), /判断力的分布/);
+});
