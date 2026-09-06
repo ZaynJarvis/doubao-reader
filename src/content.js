@@ -136,6 +136,7 @@
     ui.shell.style.left = `${Math.max(0, Math.min(left, window.innerWidth - 52))}px`;
     ui.shell.style.top = `${Math.max(0, Math.min(top, window.innerHeight - 52))}px`;
     ui.shell.style.right = "auto";
+    ui.shell.style.transform = "none";
   }
 
   async function refreshSettings() {
@@ -816,8 +817,8 @@
       :host { all: initial; }
       * { box-sizing: border-box; }
       button { font: inherit; }
-      .shell { position: fixed; top: clamp(84px, 16vh, 132px); right: 22px; z-index: 2147483647; width: 52px; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #fff; }
-      .time { position: absolute; right: 12px; bottom: calc(100% - 6px); min-width: 28px; padding: 1px 7px; border-radius: 10px; color: #fff; background: rgba(31,31,32,.94); box-shadow: 0 0 0 1px rgba(255,255,255,.055), 0 4px 12px rgba(0,0,0,.18); font-size: 11px; font-weight: 700; line-height: 16px; letter-spacing: -.02em; text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; cursor: grab; touch-action: none; user-select: none; }
+      .shell { position: fixed; top: 50%; right: 22px; transform: translateY(-50%); z-index: 2147483647; width: 52px; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #fff; }
+      .time { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(100% - 6px); min-width: 28px; padding: 1px 7px; border-radius: 10px; color: #fff; background: rgba(31,31,32,.94); box-shadow: 0 0 0 1px rgba(255,255,255,.055), 0 4px 12px rgba(0,0,0,.18); font-size: 11px; font-weight: 700; line-height: 16px; letter-spacing: -.02em; text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; cursor: grab; touch-action: none; user-select: none; }
       .time:active { cursor: grabbing; }
       .player { position: relative; width: 52px; }
       .primary-rail { display: flex; width: 52px; padding: 12px; }
@@ -847,7 +848,7 @@
         .secondary-rail { transition: opacity 120ms ease; transform: none; }
         .shell:has(:focus-visible) .secondary-rail, .shell.touch-expanded .secondary-rail { transform: none; }
       }
-      @media (max-width: 480px) { .shell { top: 88px; right: 12px; } }
+      @media (max-width: 480px) { .shell { right: 12px; } }
     </style>`;
   }
 
