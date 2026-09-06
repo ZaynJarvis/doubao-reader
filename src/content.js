@@ -229,7 +229,23 @@
 
     await waitForContentSettle();
     const extracted = extractReadableSegments();
-    await beginQueue(extracted.queue, extracted.title || document.title || "当前页面");
+    await beginQueue(extracted.queue, extracted.title || document.title || "当前页面", firstVisibleIndex(extracted.queue));
+  }
+
+  // Start from the first segment whose text is at or below the top of the viewport,
+  // so a page scrolled halfway down reads from where the user is looking.
+  function firstVisibleIndex(queue) {
+    const index = queue.findIndex((segment) => {
+      const nodes = segment.nodes?.length ? segment.nodes : segment.node ? [segment.node] : [];
+      return nodes.some((node) => {
+        if (!node?.isConnected) return false;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const rect = range.getBoundingClientRect?.();
+        return Boolean(rect) && rect.height > 0 && rect.bottom >= 0;
+      });
+    });
+    return index > 0 ? index : 0;
   }
 
   async function startReading(text, label) {
@@ -246,7 +262,7 @@
     await beginQueue(queue, label);
   }
 
-  async function beginQueue(queue, label) {
+  async function beginQueue(queue, label, startIndex = 0) {
     if (!queue.length) {
       showError("这页没有找到可朗读的正文。可先选中文字再试。");
       return;
@@ -254,7 +270,7 @@
 
     await stopReading();
     state.queue = queue;
-    state.currentIndex = 0;
+    state.currentIndex = startIndex;
     state.currentTime = 0;
     state.duration = null;
     state.wordTimings = [];
@@ -266,7 +282,7 @@
     state.mode = "loading";
     ui.player.setAttribute("aria-label", `${label} · 豆包阅读器`);
     render();
-    await loadAndPlay(0);
+    await loadAndPlay(startIndex);
   }
 
   async function loadAndPlay(index) {
