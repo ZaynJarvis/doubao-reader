@@ -285,7 +285,23 @@
     await loadAndPlay(startIndex);
   }
 
+  // Infinite-scroll pages append content as the user (or our auto-scroll) moves
+  // down. Re-extract and append only blocks whose nodes we have not queued yet.
+  function extendQueue() {
+    const known = new Set(state.queue.flatMap((segment) => segment.nodes || []));
+    if (!known.size || !extractor) return false;
+    const result = extractor.extractPage(document, { window });
+    const freshBlocks = result.blocks.filter((block) => !(block.nodes || [block.node]).some((node) => known.has(node)));
+    const fresh = extractor.segmentBlocks(freshBlocks, { maxLength: MAX_SEGMENT_LENGTH, targetLength: 120 });
+    if (!fresh.length) return false;
+    state.queue.push(...fresh);
+    return true;
+  }
+
   async function loadAndPlay(index) {
+    if (index >= state.queue.length && state.sessionId && extendQueue()) {
+      render();
+    }
     if (index < 0 || index >= state.queue.length || !state.sessionId) {
       finishReading();
       return;
@@ -359,6 +375,9 @@
       state.mode = "playing";
       render();
 
+      if (index + 1 >= state.queue.length) {
+        extendQueue();
+      }
       if (index + 1 < state.queue.length) {
         synthesize(index + 1, expectedSession).catch(() => undefined);
       }
