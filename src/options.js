@@ -2,7 +2,7 @@
 
 const FIXED_RESOURCE_ID = "seed-tts-2.0";
 const DEFAULTS = Object.freeze({
-  speaker: "zh_female_wanwanxiaohe_moon_bigtts",
+  speaker: "zh_male_liufei_uranus_bigtts",
   rate: 1,
 });
 const RATE_STEPS = new Set([0.75, 1, 1.2, 1.5, 2]);
