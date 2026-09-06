@@ -33,7 +33,7 @@ Key 应从[豆包语音控制台的 API Key 管理](https://console.volcengine.c
 ### 方式一：加载已解压的扩展（开发者）
 
 ```bash
-git clone <本仓库地址> doubao-reader
+git clone https://github.com/ZaynJarvis/doubao-reader.git
 ```
 
 1. 打开 `chrome://extensions`，开启右上角「开发者模式」。
