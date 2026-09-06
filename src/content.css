@@ -1,9 +1,9 @@
 ::highlight(doubao-reader-segment) {
-  background: rgba(88, 108, 255, 0.16);
+  background: rgba(88, 108, 255, 0.22);
 }
 
 ::highlight(doubao-reader-word) {
-  background: rgba(88, 108, 255, 0.42);
+  background: rgba(88, 108, 255, 0.5);
 }
 
 .doubao-reader-source-active {

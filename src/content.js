@@ -817,7 +817,7 @@
       * { box-sizing: border-box; }
       button { font: inherit; }
       .shell { position: fixed; top: clamp(84px, 16vh, 132px); right: 22px; z-index: 2147483647; width: 52px; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #fff; }
-      .time { position: absolute; right: 0; bottom: calc(100% + 6px); min-width: 52px; color: #fff; font-size: 13px; font-weight: 700; line-height: 18px; letter-spacing: -.02em; text-align: center; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,.9), 0 0 4px rgba(0,0,0,.6); font-variant-numeric: tabular-nums; cursor: grab; touch-action: none; user-select: none; }
+      .time { position: absolute; right: 0; bottom: calc(100% + 6px); min-width: 52px; padding: 2px 8px; border-radius: 11px; color: #fff; background: rgba(31,31,32,.94); box-shadow: 0 0 0 1px rgba(255,255,255,.055), 0 4px 12px rgba(0,0,0,.18); font-size: 12px; font-weight: 700; line-height: 18px; letter-spacing: -.02em; text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; cursor: grab; touch-action: none; user-select: none; }
       .time:active { cursor: grabbing; }
       .player { position: relative; width: 52px; }
       .primary-rail, .secondary-rail { display: flex; width: 52px; align-items: center; flex-direction: column; padding: 12px; border: 0; border-radius: 26px; background: rgba(31,31,32,.96); box-shadow: 0 0 0 1px rgba(255,255,255,.055), 0 8px 22px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035); backdrop-filter: blur(16px); }
