@@ -177,6 +177,12 @@ form {
   white-space: nowrap;
 }
 
+.speaker-control {
+  display: grid;
+  gap: 8px;
+}
+
+select,
 input[type="text"],
 input[type="password"] {
   width: 100%;
@@ -196,6 +202,7 @@ input::placeholder {
   color: var(--placeholder);
 }
 
+select:focus,
 input[type="text"]:focus,
 input[type="password"]:focus {
   border-color: var(--blue);
@@ -351,20 +358,14 @@ footer {
   color: var(--error);
 }
 
-.support {
-  margin: 40px 4px 0;
-  color: var(--muted);
-  font-size: 12px;
-  text-align: right;
+.bmc {
+  display: inline-flex;
+  height: 44px;
 }
 
-.support a {
-  color: var(--blue);
-  text-decoration: none;
-}
-
-.support a:hover {
-  text-decoration: underline;
+.bmc img {
+  height: 44px;
+  border-radius: 10px;
 }
 
 .save-button {

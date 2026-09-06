@@ -2,7 +2,7 @@
 
 const FIXED_RESOURCE_ID = "seed-tts-2.0";
 const DEFAULTS = Object.freeze({
-  speaker: "zh_female_vv_uranus_bigtts",
+  speaker: "zh_female_wanwanxiaohe_moon_bigtts",
   rate: 1,
 });
 const RATE_STEPS = new Set([0.75, 1, 1.25, 1.5, 2]);
@@ -15,6 +15,7 @@ const elements = {
   rates: [...document.querySelectorAll('input[name="rate"]')],
   save: document.querySelector("#save"),
   speaker: document.querySelector("#speaker"),
+  speakerPreset: document.querySelector("#speaker-preset"),
   status: document.querySelector("#status"),
   toggleKey: document.querySelector("#toggle-key"),
 };
@@ -30,6 +31,13 @@ elements.speaker.addEventListener("input", () => {
   clearInvalid(elements.speaker);
   markDirty();
 });
+elements.speakerPreset.addEventListener("change", () => {
+  elements.speaker.hidden = Boolean(elements.speakerPreset.value);
+  if (!elements.speakerPreset.value) {
+    elements.speaker.focus();
+  }
+  markDirty();
+});
 for (const rate of elements.rates) {
   rate.addEventListener("change", markDirty);
 }
@@ -39,7 +47,7 @@ load();
 async function load() {
   try {
     const stored = await chrome.storage.local.get(["speechApiKey", "speaker", "rate"]);
-    elements.speaker.value = stored.speaker || DEFAULTS.speaker;
+    selectSpeaker(stored.speaker || DEFAULTS.speaker);
     selectRate(stored.rate);
     updateKeyState(Boolean(stored.speechApiKey));
     elements.apiKey.setAttribute("aria-required", String(!stored.speechApiKey));
@@ -56,7 +64,7 @@ async function save(event) {
   clearStatus();
 
   const typedKey = elements.apiKey.value.trim();
-  const speaker = elements.speaker.value.trim();
+  const speaker = (elements.speakerPreset.value || elements.speaker.value).trim();
 
   if (!speaker) {
     showValidation(elements.speaker, "需要音色 ID");
@@ -92,6 +100,13 @@ async function save(event) {
   } finally {
     setBusy(false);
   }
+}
+
+function selectSpeaker(value) {
+  const preset = [...elements.speakerPreset.options].some((option) => option.value === value);
+  elements.speakerPreset.value = preset ? value : "";
+  elements.speaker.value = preset ? "" : value;
+  elements.speaker.hidden = preset;
 }
 
 function selectRate(value) {
@@ -162,7 +177,7 @@ function markDirty() {
 
 function setBusy(busy) {
   elements.form.setAttribute("aria-busy", String(busy));
-  for (const control of [elements.apiKey, elements.speaker, elements.toggleKey, ...elements.rates]) {
+  for (const control of [elements.apiKey, elements.speaker, elements.speakerPreset, elements.toggleKey, ...elements.rates]) {
     control.disabled = busy;
   }
   elements.save.disabled = busy;

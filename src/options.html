@@ -65,27 +65,27 @@
             <label for="speaker">音色 ID</label>
           </div>
 
-          <div class="setting-control">
-            <input
-              id="speaker"
-              type="text"
-              list="speaker-presets"
-              autocomplete="off"
-              spellcheck="false"
-              value="zh_female_vv_uranus_bigtts"
-              required
-              aria-describedby="speaker-hint"
-              aria-errormessage="status"
-            >
-            <datalist id="speaker-presets">
+          <div class="setting-control speaker-control">
+            <select id="speaker-preset" aria-label="预置音色">
               <option value="zh_female_wanwanxiaohe_moon_bigtts">夹子</option>
               <option value="zh_male_liufei_uranus_bigtts">刘飞</option>
               <option value="ICL_uranus_en_male_the_grinch_tob">老头老外</option>
               <option value="ICL_uranus_en_male_michael_tob">英俊老外</option>
               <option value="zh_female_jiaochuannv_uranus_bigtts">慵懒女</option>
               <option value="zh_female_gujie_uranus_bigtts">顾里</option>
-            </datalist>
-            <p id="speaker-hint" class="hint">点击输入框选择预置音色，或到 <a href="https://console.volcengine.com/speech/new/voices?projectName=default" target="_blank" rel="noopener">火山引擎音色库</a> 获取更多音色 ID</p>
+              <option value="">自定义音色 ID…</option>
+            </select>
+            <input
+              id="speaker"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="音色 ID"
+              aria-describedby="speaker-hint"
+              aria-errormessage="status"
+              hidden
+            >
+            <p id="speaker-hint" class="hint">到 <a href="https://console.volcengine.com/speech/new/voices?projectName=default" target="_blank" rel="noopener">火山引擎音色库</a> 获取更多音色 ID</p>
           </div>
         </div>
 
@@ -129,11 +129,11 @@
         <footer>
           <p id="status" role="status" aria-live="polite"></p>
           <button id="save" class="save-button" type="submit">保存</button>
+          <a class="bmc" href="https://buymeacoffee.com/zaynjarvis" target="_blank" rel="noopener" title="Buy me a coffee">
+            <img src="../icons/bmc-button.png" alt="Buy me a coffee">
+          </a>
         </footer>
       </form>
-      <p class="support">
-        觉得好用？<a href="https://buymeacoffee.com/zaynjarvis" target="_blank" rel="noopener">☕ Buy me a coffee</a>
-      </p>
     </main>
     <script src="options.js"></script>
   </body>
